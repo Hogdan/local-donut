@@ -3,6 +3,7 @@ import Animated, {
   interpolate,
   SharedValue,
   useAnimatedProps,
+  useDerivedValue,
 } from "react-native-reanimated";
 import { Circle } from "react-native-svg";
 
@@ -33,18 +34,17 @@ export const DonutChartSegment: FC<{
       [0, 1],
       [circumference, circumference * (1 - percent)],
     );
-    const rotateAngle = interpolate(progress.value, [0, 1], [0, angle]);
-
     return {
       strokeDashoffset,
-      transform: [
-        { translateX: center },
-        { translateY: center },
-        { rotate: `${rotateAngle}deg` },
-        { translateX: -center },
-        { translateY: -center },
-      ],
     };
+  });
+
+  const rotateAngle = useDerivedValue(() => {
+    return interpolate(progress.value, [0, 1], [0, angle]);
+  });
+
+  const transformString = useDerivedValue(() => {
+    return `translate(${center}, ${center}) rotate(${rotateAngle.value}) translate(${-center}, ${-center})`;
   });
 
   return (
@@ -57,6 +57,8 @@ export const DonutChartSegment: FC<{
       strokeDasharray={circumference}
       fillOpacity={0}
       animatedProps={animatedProps}
+      // @ts-ignore
+      transform={transformString.value}
     />
   );
 };
